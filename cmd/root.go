@@ -21,4 +21,5 @@ func init() {
 	rootCmd.AddCommand(serveCmd)
 	rootCmd.AddCommand(queueCmd)
 	rootCmd.AddCommand(createAdminCmd)
+	rootCmd.AddCommand(seedCmd)
 }

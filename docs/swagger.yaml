@@ -1,3 +1,281 @@
+definitions:
+  auth.LoginRequest:
+    properties:
+      email:
+        example: john.doe@example.com
+        type: string
+      password:
+        example: SecurePass123
+        type: string
+    required:
+    - email
+    - password
+    type: object
+  auth.LoginResponse:
+    properties:
+      access_token:
+        example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+        type: string
+      expires_in:
+        example: 3600
+        type: integer
+      token_type:
+        example: Bearer
+        type: string
+      user:
+        $ref: '#/definitions/auth.UserResponse'
+    type: object
+  auth.RegisterRequest:
+    properties:
+      email:
+        example: john.doe@example.com
+        type: string
+      name:
+        example: John Doe
+        type: string
+      password:
+        example: SecurePass123
+        type: string
+      role:
+        description: Optional, only allowed for admin users
+        example: user
+        type: string
+    required:
+    - email
+    - name
+    - password
+    type: object
+  auth.RegisterResponse:
+    properties:
+      message:
+        example: Registration successful. Welcome email has been sent.
+        type: string
+      user:
+        $ref: '#/definitions/auth.UserResponse'
+    type: object
+  auth.UserResponse:
+    properties:
+      created_at:
+        example: "2025-07-19T10:30:00Z"
+        type: string
+      email:
+        example: john.doe@example.com
+        type: string
+      id:
+        example: 550e8400-e29b-41d4-a716-446655440000
+        type: string
+      name:
+        example: John Doe
+        type: string
+      role:
+        example: user
+        type: string
+      updated_at:
+        example: "2025-07-19T10:30:00Z"
+        type: string
+    type: object
+  auth.ValidationError:
+    properties:
+      field:
+        example: email
+        type: string
+      message:
+        example: email format is invalid
+        type: string
+    type: object
+  auth.ValidationErrors:
+    properties:
+      errors:
+        items:
+          $ref: '#/definitions/auth.ValidationError'
+        type: array
+    type: object
+  common.BaseResponse:
+    properties:
+      code:
+        type: integer
+      data: {}
+      message:
+        type: string
+    type: object
+  project.CreateProjectRequest:
+    properties:
+      description:
+        maxLength: 1000
+        type: string
+      name:
+        maxLength: 255
+        minLength: 1
+        type: string
+    required:
+    - name
+    type: object
+  project.ProjectListResponse:
+    properties:
+      limit:
+        type: integer
+      page:
+        type: integer
+      projects:
+        items:
+          $ref: '#/definitions/project.ProjectResponse'
+        type: array
+      total:
+        type: integer
+    type: object
+  project.ProjectResponse:
+    properties:
+      created_at:
+        type: string
+      created_by:
+        type: string
+      description:
+        type: string
+      id:
+        type: string
+      name:
+        type: string
+      updated_at:
+        type: string
+    type: object
+  project.UpdateProjectRequest:
+    properties:
+      description:
+        maxLength: 1000
+        type: string
+      name:
+        maxLength: 255
+        minLength: 1
+        type: string
+    type: object
+  task.AssignTaskRequest:
+    properties:
+      assigned_to:
+        type: string
+    required:
+    - assigned_to
+    type: object
+  task.CreateTaskRequest:
+    properties:
+      assigned_to:
+        type: string
+      description:
+        maxLength: 1000
+        type: string
+      due_date:
+        type: string
+      priority:
+        enum:
+        - low
+        - medium
+        - high
+        type: string
+      project_id:
+        type: string
+      status:
+        enum:
+        - pending
+        - in_progress
+        - completed
+        type: string
+      title:
+        maxLength: 100
+        minLength: 1
+        type: string
+    required:
+    - project_id
+    - title
+    type: object
+  task.TaskListResponse:
+    properties:
+      limit:
+        type: integer
+      page:
+        type: integer
+      tasks:
+        items:
+          $ref: '#/definitions/task.TaskResponse'
+        type: array
+      total:
+        type: integer
+    type: object
+  task.TaskResponse:
+    properties:
+      assigned_to:
+        type: string
+      created_at:
+        type: string
+      created_by:
+        type: string
+      description:
+        type: string
+      due_date:
+        type: string
+      id:
+        type: string
+      priority:
+        type: string
+      project_id:
+        type: string
+      status:
+        type: string
+      title:
+        type: string
+      updated_at:
+        type: string
+    type: object
+  task.UpdateTaskRequest:
+    properties:
+      assigned_to:
+        type: string
+      description:
+        maxLength: 1000
+        type: string
+      due_date:
+        type: string
+      priority:
+        enum:
+        - low
+        - medium
+        - high
+        type: string
+      status:
+        enum:
+        - pending
+        - in_progress
+        - completed
+        type: string
+      title:
+        maxLength: 100
+        minLength: 1
+        type: string
+    type: object
+  user.ProfileResponse:
+    properties:
+      user:
+        $ref: '#/definitions/user.UserResponse'
+    type: object
+  user.UserResponse:
+    properties:
+      created_at:
+        example: "2025-07-19T10:30:00Z"
+        type: string
+      email:
+        example: john.doe@example.com
+        type: string
+      id:
+        example: 550e8400-e29b-41d4-a716-446655440000
+        type: string
+      name:
+        example: John Doe
+        type: string
+      role:
+        example: user
+        type: string
+      updated_at:
+        example: "2025-07-19T10:30:00Z"
+        type: string
+    type: object
 info:
   contact: {}
 paths:
@@ -15,4 +293,683 @@ paths:
             additionalProperties: true
             type: object
       summary: Show home
+  /api/v1/auth/login:
+    post:
+      consumes:
+      - application/json
+      description: Authenticate user with email and password
+      parameters:
+      - description: User login credentials
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/auth.LoginRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Login successful
+          schema:
+            allOf:
+            - $ref: '#/definitions/common.BaseResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/auth.LoginResponse'
+              type: object
+        "400":
+          description: Bad request - validation errors
+          schema:
+            $ref: '#/definitions/common.BaseResponse'
+        "401":
+          description: Unauthorized - invalid credentials
+          schema:
+            $ref: '#/definitions/common.BaseResponse'
+        "422":
+          description: Validation failed
+          schema:
+            allOf:
+            - $ref: '#/definitions/common.BaseResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/auth.ValidationErrors'
+              type: object
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/common.BaseResponse'
+      summary: User login
+      tags:
+      - Authentication
+  /api/v1/auth/register:
+    post:
+      consumes:
+      - application/json
+      description: Register a new user account with email and password. Admins can
+        specify role.
+      parameters:
+      - description: User registration data
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/auth.RegisterRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: User registered successfully
+          schema:
+            allOf:
+            - $ref: '#/definitions/common.BaseResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/auth.RegisterResponse'
+              type: object
+        "400":
+          description: Bad request - validation errors
+          schema:
+            $ref: '#/definitions/common.BaseResponse'
+        "401":
+          description: Unauthorized - invalid token
+          schema:
+            $ref: '#/definitions/common.BaseResponse'
+        "403":
+          description: Forbidden - insufficient permissions
+          schema:
+            $ref: '#/definitions/common.BaseResponse'
+        "409":
+          description: Conflict - email already exists
+          schema:
+            $ref: '#/definitions/common.BaseResponse'
+        "422":
+          description: Validation failed
+          schema:
+            allOf:
+            - $ref: '#/definitions/common.BaseResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/auth.ValidationErrors'
+              type: object
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/common.BaseResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Register a new user
+      tags:
+      - Authentication
+  /api/v1/projects:
+    get:
+      consumes:
+      - application/json
+      description: Get all projects with pagination
+      parameters:
+      - description: 'Page number (default: 1)'
+        in: query
+        name: page
+        type: integer
+      - description: 'Page size (default: 10, max: 100)'
+        in: query
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Projects retrieved successfully
+          schema:
+            allOf:
+            - $ref: '#/definitions/common.BaseResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/project.ProjectListResponse'
+              type: object
+        "400":
+          description: Bad request
+          schema:
+            $ref: '#/definitions/common.BaseResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/common.BaseResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/common.BaseResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Get all projects
+      tags:
+      - Project
+    post:
+      consumes:
+      - application/json
+      description: Create a new project (only managers and admins)
+      parameters:
+      - description: Project creation request
+        in: body
+        name: payload
+        required: true
+        schema:
+          $ref: '#/definitions/project.CreateProjectRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Project created successfully
+          schema:
+            allOf:
+            - $ref: '#/definitions/common.BaseResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/project.ProjectResponse'
+              type: object
+        "400":
+          description: Bad request
+          schema:
+            $ref: '#/definitions/common.BaseResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/common.BaseResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/common.BaseResponse'
+        "409":
+          description: Project name already exists
+          schema:
+            $ref: '#/definitions/common.BaseResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/common.BaseResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Create a new project
+      tags:
+      - Project
+  /api/v1/projects/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Delete an existing project and all its tasks
+      parameters:
+      - description: Project ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Project deleted successfully
+          schema:
+            $ref: '#/definitions/common.BaseResponse'
+        "400":
+          description: Bad request
+          schema:
+            $ref: '#/definitions/common.BaseResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/common.BaseResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/common.BaseResponse'
+        "404":
+          description: Project not found
+          schema:
+            $ref: '#/definitions/common.BaseResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/common.BaseResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Delete project
+      tags:
+      - Project
+    get:
+      consumes:
+      - application/json
+      description: Get a project by its ID
+      parameters:
+      - description: Project ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Project retrieved successfully
+          schema:
+            allOf:
+            - $ref: '#/definitions/common.BaseResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/project.ProjectResponse'
+              type: object
+        "400":
+          description: Bad request
+          schema:
+            $ref: '#/definitions/common.BaseResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/common.BaseResponse'
+        "404":
+          description: Project not found
+          schema:
+            $ref: '#/definitions/common.BaseResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/common.BaseResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Get project by ID
+      tags:
+      - Project
+    put:
+      consumes:
+      - application/json
+      description: Update an existing project
+      parameters:
+      - description: Project ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Project update request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/project.UpdateProjectRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Project updated successfully
+          schema:
+            allOf:
+            - $ref: '#/definitions/common.BaseResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/project.ProjectResponse'
+              type: object
+        "400":
+          description: Bad request
+          schema:
+            $ref: '#/definitions/common.BaseResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/common.BaseResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/common.BaseResponse'
+        "404":
+          description: Project not found
+          schema:
+            $ref: '#/definitions/common.BaseResponse'
+        "409":
+          description: Project name already exists
+          schema:
+            $ref: '#/definitions/common.BaseResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/common.BaseResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Update project
+      tags:
+      - Project
+  /api/v1/tasks:
+    get:
+      consumes:
+      - application/json
+      description: Get tasks with filtering and pagination (role-based access)
+      parameters:
+      - description: Filter by project ID
+        in: query
+        name: project_id
+        type: string
+      - description: Filter by assigned user ID
+        in: query
+        name: assigned_to
+        type: string
+      - description: Filter by status (pending, in_progress, completed)
+        in: query
+        name: status
+        type: string
+      - description: Filter by priority (low, medium, high)
+        in: query
+        name: priority
+        type: string
+      - description: 'Page number (default: 1)'
+        in: query
+        name: page
+        type: integer
+      - description: 'Page size (default: 10, max: 100)'
+        in: query
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Tasks retrieved successfully
+          schema:
+            allOf:
+            - $ref: '#/definitions/common.BaseResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/task.TaskListResponse'
+              type: object
+        "400":
+          description: Bad request
+          schema:
+            $ref: '#/definitions/common.BaseResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/common.BaseResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/common.BaseResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Get tasks with filters
+      tags:
+      - Task
+    post:
+      consumes:
+      - application/json
+      description: Create a new task (must belong to a project)
+      parameters:
+      - description: Task creation request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/task.CreateTaskRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Task created successfully
+          schema:
+            allOf:
+            - $ref: '#/definitions/common.BaseResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/task.TaskResponse'
+              type: object
+        "400":
+          description: Bad request
+          schema:
+            $ref: '#/definitions/common.BaseResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/common.BaseResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/common.BaseResponse'
+        "404":
+          description: Project or user not found
+          schema:
+            $ref: '#/definitions/common.BaseResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/common.BaseResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Create a new task
+      tags:
+      - Task
+  /api/v1/tasks/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Delete an existing task (creator, manager, or admin only)
+      parameters:
+      - description: Task ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Task deleted successfully
+          schema:
+            $ref: '#/definitions/common.BaseResponse'
+        "400":
+          description: Bad request
+          schema:
+            $ref: '#/definitions/common.BaseResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/common.BaseResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/common.BaseResponse'
+        "404":
+          description: Task not found
+          schema:
+            $ref: '#/definitions/common.BaseResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/common.BaseResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Delete task
+      tags:
+      - Task
+    get:
+      consumes:
+      - application/json
+      description: Get a task by its ID (with permission checks)
+      parameters:
+      - description: Task ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Task retrieved successfully
+          schema:
+            allOf:
+            - $ref: '#/definitions/common.BaseResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/task.TaskResponse'
+              type: object
+        "400":
+          description: Bad request
+          schema:
+            $ref: '#/definitions/common.BaseResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/common.BaseResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/common.BaseResponse'
+        "404":
+          description: Task not found
+          schema:
+            $ref: '#/definitions/common.BaseResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/common.BaseResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Get task by ID
+      tags:
+      - Task
+    put:
+      consumes:
+      - application/json
+      description: Update an existing task (with permission checks)
+      parameters:
+      - description: Task ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Task update request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/task.UpdateTaskRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Task updated successfully
+          schema:
+            allOf:
+            - $ref: '#/definitions/common.BaseResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/task.TaskResponse'
+              type: object
+        "400":
+          description: Bad request
+          schema:
+            $ref: '#/definitions/common.BaseResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/common.BaseResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/common.BaseResponse'
+        "404":
+          description: Task not found
+          schema:
+            $ref: '#/definitions/common.BaseResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/common.BaseResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Update task
+      tags:
+      - Task
+  /api/v1/tasks/{id}/assign:
+    put:
+      consumes:
+      - application/json
+      description: Assign a task to a user (managers and admins only)
+      parameters:
+      - description: Task ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Task assignment request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/task.AssignTaskRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Task assigned successfully
+          schema:
+            allOf:
+            - $ref: '#/definitions/common.BaseResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/task.TaskResponse'
+              type: object
+        "400":
+          description: Bad request
+          schema:
+            $ref: '#/definitions/common.BaseResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/common.BaseResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/common.BaseResponse'
+        "404":
+          description: Task or user not found
+          schema:
+            $ref: '#/definitions/common.BaseResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/common.BaseResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Assign task to user
+      tags:
+      - Task
+  /api/v1/user/me:
+    get:
+      consumes:
+      - application/json
+      description: Get the current user's profile information
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: User profile retrieved successfully
+          schema:
+            allOf:
+            - $ref: '#/definitions/common.BaseResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/user.ProfileResponse'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/common.BaseResponse'
+        "404":
+          description: User not found
+          schema:
+            $ref: '#/definitions/common.BaseResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/common.BaseResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Get user profile
+      tags:
+      - User
 swagger: "2.0"

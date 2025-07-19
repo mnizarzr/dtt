@@ -16,16 +16,16 @@ migration:
 
 .PHONY: migrate
 migrate:
-	migrate -path db/migrations -database "$(PGDB_URI)?sslmode=disable -verbose up
+	migrate -path db/migrations -database "$(PGDB_URI)" -verbose up
 
 .PHONY: rollback
 rollback:
-	migrate -path db/migrations -database "$(PGDB_URI)?sslmode=disable -verbose down 1
+	migrate -path db/migrations -database "$(PGDB_URI)" -verbose down 1
 
 .PHONY: rollback-all
 rollback-all:
-	migrate -path db/migrations -database "$(PGDB_URI)?sslmode=disable -verbose down -all
+	migrate -path db/migrations -database "$(PGDB_URI)" -verbose down -all
 
 .PHONY: force-migrate
 force-migrate:
-	migrate -path db/migrations -database "$(PGDB_URI)?sslmode=disable -verbose force $(version)
+	migrate -path db/migrations -database "$(PGDB_URI)" -verbose force $(version)

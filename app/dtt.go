@@ -1,6 +1,7 @@
 package app
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 	"time"
@@ -9,6 +10,7 @@ import (
 	"github.com/mnizarzr/dot-test/config"
 	"github.com/mnizarzr/dot-test/db"
 	_ "github.com/mnizarzr/dot-test/docs"
+	"github.com/mnizarzr/dot-test/middleware"
 	swaggerFiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
 )
@@ -24,43 +26,65 @@ func splash() {
 `)
 }
 
-// @title           Swagger Example API
-// @version         1.0
-// @description     This is a sample server celler server.
-// @termsOfService  http://swagger.io/terms/
+//// securityDefinitions doesn't work
+//	@title			Swagger Example API
+//	@version		1.0
+//	@description	This is a sample server celler server.
+//	@termsOfService	http://swagger.io/terms/
 
-// @contact.name   API Support
-// @contact.url    http://www.swagger.io/support
-// @contact.email  support@swagger.io
+//	@contact.name	API Support
+//	@contact.url	http://www.swagger.io/support
+//	@contact.email	support@swagger.io
 
-// @license.name  Apache 2.0
-// @license.url   http://www.apache.org/licenses/LICENSE-2.0.html
+//	@license.name	Apache 2.0
+//	@license.url	http://www.apache.org/licenses/LICENSE-2.0.html
 
-// @host      localhost:8080
-// @BasePath  /api/v1
+//	@host		localhost:8080
+//	@BasePath	/api/v1
 
-// @securityDefinitions.basic  BasicAuth
+//	@securityDefinitions.apikey	apikey
+//	@in							header
+//	@name						Authorization
+//	@description				Type "Bearer" followed by a space and JWT token.
 
-// @externalDocs.description  OpenAPI
-// @externalDocs.url          https://swagger.io/resources/open-api/
+// @externalDocs.description	OpenAPI
+// @externalDocs.url			https://swagger.io/resources/open-api/
 
 func Setup() {
 
 	splash()
 
-	config, err := config.LoadConfig(".")
+	cfg, err := config.LoadConfig(".")
 	if err != nil {
-		panic(fmt.Sprintf("Error loading config: %v", err))
+		panic(fmt.Sprintf("Error loading cfg: %v", err))
 	}
 
-	_, err = db.NewPostgresGormDb(config.PgUri)
+	database, err := db.NewPostgresGormDb(cfg.PgUri)
+	if err != nil {
+		panic(fmt.Sprintf("Error connecting to database: %v", err))
+	}
+
+	redis := db.NewRedisClient(cfg.RedisAddress, cfg.RedisPassword)
+	if err := redis.Ping(context.Background()); err != nil {
+		panic(fmt.Sprintf("Error connecting to Redis: %v", err))
+	}
 
 	r := gin.Default()
+	if cfg.Env == "production" {
+		gin.SetMode(gin.ReleaseMode)
+	}
+	r.Use(middleware.SetupCORS())
 
+	// Basic routes
 	r.GET("/", Home)
-
 	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
-	r.Run(":8080")
+
+	BuildHandler(cfg, r, database, redis)
+
+	err = r.Run(":8080")
+	if err != nil {
+		panic(fmt.Sprintf("Error starting server: %v", err))
+	}
 }
 
 // Home godoc
